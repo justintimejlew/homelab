@@ -1,0 +1,6 @@
+{
+  "image": "ghcr.io/justintimejlew/dotfiles-devcontainer:latest",
+  "runArgs": [
+    "--hostname=devpod"
+  ]
+}
