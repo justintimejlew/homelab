@@ -1,0 +1,11 @@
+apiVersion: apps/v1
+kind: persistentVolumeClaim
+metadata:
+  name: linkding-data-pc
+  namespace: linkding
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
