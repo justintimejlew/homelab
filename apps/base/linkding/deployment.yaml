@@ -1,8 +1,6 @@
-apiVersion: apps/v1
+apiVersion: app/v1
 kind: Deployment
 metadata:
-  labels:
-    app: linkding
   name: linkding
 spec:
   replicas: 1
