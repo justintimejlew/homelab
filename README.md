@@ -1,4 +1,8 @@
+<div align="center">
+
 # Homelab - Beyond the Certifications
+
+</div>
 
 ## Introduction
 After obtaining my RHCSA and RHCE, I realized quickly that even though certifications are helpful, what matters the most is what you do beyond the certifications.
@@ -10,21 +14,21 @@ My homelab is the place where I can try out and learn new things.
 In addition, by self-hosting applications, it makes me feel responsible for the entire process of deploying and maintaining an application from A to Z. It forces me to think about backup strategies, security, scalability and the ease of deployment and maintenance.
 
 ## Architecture Overview
-> **Status:** Planned target architecture. The M920Q arrived September 8, 2026 and has not yet been imaged/joined to the cluster — currently running on 2 nodes (T480 + NUC). Diagram reflects the intended 3-node HA state once M920Q setup is complete.
+> **Status:** Planned target architecture. The M920Q arrived September 8, 2026 and was imaged on September 9, 2026, but it has not joined to the cluster — currently running on 2 nodes (T480 + NUC). Diagram reflects the intended 3-node HA state once M920Q setup is complete.
 ```mermaid
 flowchart TB
     subgraph HW["Hardware"]
-        UPS[CyberPower ST425 UPS]
-        SW[TP-Link TL-SG108E]
-        RTR[GL.iNet GL-A1300]
+        SW["TP-Link TL-SG108E
+        (Switch)"]
+        RTR["GL.iNet GL-A1300
+        (Router)"]
         T480["ThinkPad T480
-        (node1)"]
+        (Node 1)"]
         NUC["Intel NUC7CJYHN
-        (node2)"]
+        (Node 2)"]
         M920["ThinkCentre M920Q
-        (node3 - not active)"]
+        (Node 3 - not configured)"]
         style M920 stroke-dasharray: 5 5,color:#999
-        UPS --> SW
         SW --> T480
         SW --> NUC
         SW --> M920
@@ -71,6 +75,28 @@ I decided to use a combination of an old laptop and old mini computers because t
 - Orchestration: K3s
 - GitOps: Flux (HTTPS/PAT auth)
 - Networking: LoadBalancer/Ingress not configured yet. Services are accessed via port-forwarding.
+
+<div align="center">
+
+### VLAN 1 Configuration - Personal
+| Device | IP |
+|---|---|
+| TL-SG108E Switch | .5 |
+| GL-A1300 (VLAN 1 Gateway) | .8 |
+| T480 (node) | .51 |
+| DHCP (personal devices) | .100-.200 |
+
+### VLAN 10 Configuration - Cluster
+| Device | IP |
+|---|---|
+| GL-A1300 (VLAN 10 Gateway) | .1 |
+| Promox Host Management | .5 |
+| K3s VIP (kube-vip) | .10 |
+| T480 (node1, control) | .11 |
+| NUC/Fedora Server 44 VM (node2) | .12 |
+| M920Q (node3) | .13 |
+
+</div>
 
 ## Deployed Services
 | Service | Purpose | Status |
@@ -119,12 +145,13 @@ I originally configured my DevPod on Ubuntu; however, once I switched my OS to F
 ## Roadmap
 | Category | Task | Status | Date |
 |---|---|---|---|
-| Homelab | Join M920Q as 3rd node for HA etcd quorum | Pending | |
+| Networking | Segment network on 802.1Q VLAN 10 trunk for security isolation | Complete | 16-SEP-26 |
 | Homelab | Expose Linkding to the internet | Pending | |
 | Homelab | Set up Ingress with Traefik | Pending | |
 | Homelab | Configure secrets management (Azure Key Vault sync) | Pending | |
 | Homelab | Add monitoring stack via Helm | Pending | |
 | Homelab | Automate image updates (Flux image automation) | Pending | |
+| Homelab | Join M920Q as 3rd node for HA etcd quorum | Pending | |
 | Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | Pending | |
 | Cloud & IaC | Learn IaC fundamentals and Terraform modules | Pending | |
 | Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | Pending | |
@@ -136,4 +163,3 @@ I originally configured my DevPod on Ubuntu; however, once I switched my OS to F
 | Production Readiness | Deploy a production-grade application with production-grade monitoring | Pending | |
 | Production Readiness | Handle staging environment fixes and production cluster/customer onboarding | Pending | |
 | GitOps | Extend Flux GitOps patterns across staging and production environments | Pending | |
-| Networking | Segment network on 802.1Q VLAN 10 for security isolation | Pending | |
