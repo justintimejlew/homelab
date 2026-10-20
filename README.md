@@ -143,7 +143,7 @@ I decided to use Flux's recommended repository structure
 |---|---|---|---|
 | Network | Segment network on 802.1Q VLAN 10 trunk for security isolation | Done | 09/16/26 |
 | Homelab | Join M920Q as 3rd node for HA etcd quorum | Done | 09/27/26 |
-| Homelab | Expose Linkding to the internet | Pending | |
+| Homelab | Expose Linkding to the internet | Done | 10/19/26 |
 | Homelab | Set up Ingress with Traefik | Pending | |
 | Homelab | Configure secrets management (Azure Key Vault sync) | Pending | |
 | Homelab | Add monitoring stack via Helm | Pending | |
@@ -244,4 +244,12 @@ Resetting the control-plane node (`k3s-uninstall.sh`) during the VLAN migration 
 I wanted to learn how to rotate a token in the event that one needed to be changed.  Running `k3s token rotate` on the server only generates a new token, it does not update the token stored locally on any node (`/etc/systemd/system/k3s.service.env`).
 
 **Fix:** manually update the token in each node's env file and restart k3s one node at a time, confirming quorum is maintained (2-of-3 minimum) before moving to the next.
+</details>
+
+<details>
+<summary><strong>New app manifests were ignored because they weren't listed in <code>kustomization.yaml</code></strong></summary>
+
+Flux only applies resources listed in `kustomization.yaml`. When I added `service.yaml` and `cloudflare.yaml` for the Cloudflare Tunnel, Flux skipped them with no error, so the app wasn't reachable.
+
+**Fix:** added each new manifest to the `resources:` list, then committed, pushed, and ran `flux reconcile kustomization <name>`. Do this every time an app is added or updated.
 </details>
