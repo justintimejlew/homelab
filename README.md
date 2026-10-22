@@ -108,7 +108,7 @@ I decided to use a combination of an old laptop and old mini computers because t
 | | Service | Purpose | Status |
 |:---:|---|---|:---:|
 | <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimeblogs.com/) |
-| <img src="doc/img/mealie.png" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
+| <img src="doc/img/mealie.svg" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
 
 
 ## Repo Structure
