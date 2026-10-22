@@ -2,7 +2,23 @@
 
 # Homelab - Beyond the Certifications
 
+3-node HA Kubernetes (K3s) cluster managed with Flux GitOps
+
+![K3s](https://img.shields.io/badge/K3s-HA%20etcd-FFC61C?logo=k3s&logoColor=black)
+![Flux](https://img.shields.io/badge/GitOps-Flux-5468FF?logo=flux&logoColor=white)
+![Fedora](https://img.shields.io/badge/OS-Fedora%2044-51A2DA?logo=fedora&logoColor=white)
+![Proxmox](https://img.shields.io/badge/Hypervisor-Proxmox-E57000?logo=proxmox&logoColor=white)
+
+[Architecture](#architecture-overview) · [Roadmap](#roadmap) · [Lessons Learned](#lessons-learned--troubleshooting)
+
 </div>
+
+## Highlights
+- 3-node HA control plane with etcd quorum and a kube-vip floating API VIP
+- GitOps with Flux: everything in the cluster is declared in this repo
+- VLAN-isolated cluster network (802.1Q) with no path to the home LAN
+- Mixed bare-metal and Proxmox-virtualized nodes
+- Public service exposed through a Cloudflare Tunnel
 
 ## Introduction
 After obtaining my RHCSA and RHCE, I realized quickly that even though certifications are helpful, what matters the most is what you do beyond the certifications.
@@ -17,45 +33,37 @@ In addition, by self-hosting applications, it makes me feel responsible for the 
 
 ```mermaid
 flowchart TB
-    subgraph HW["Hardware"]
-        SW["TP-Link TL-SG108E
-        (Switch)"]
-        RTR["GL.iNet GL-A1300
-        (Router)"]
-        T480["ThinkPad T480
-        (Node 1)"]
-        NUC["Intel NUC7CJYHN
-        (Node 2)"]
-        M920["ThinkCentre M920Q
-        (Node 3)"]
-        SW --> T480
-        SW --> NUC
-        SW --> M920
-        RTR -.-> SW
+    ISP((Internet))
+    SW["TP-Link TL-SG108E
+    (Switch)"]
+    RTR["GL.iNet GL-A1300
+    (Router)"]
+    ISP --- RTR
+    RTR --- SW
+
+    subgraph K3S["K3s Cluster - VLAN 10"]
+        VIP{{kube-vip}}
+        subgraph CTRL["Control plane / etcd - 3-node quorum"]
+            T480["ThinkPad T480
+            (Node 1)"]
+            NUC["Intel NUC7CJYHN
+            (Node 2)"]
+            M920["ThinkCentre M920Q
+            (Node 3)"]
+        end
+        subgraph SVC["Services"]
+            LD[Linkding]
+        end
+        FLUX ---| Deploys | SVC
+        FLUX --- CTRL
     end
+   
+    SW --- T480
+    SW --- NUC
+    SW --- M920
 
-    subgraph K3S["K3s Cluster"]
-        CTRL[Control plane / etcd]
-        WRK1[Worker]
-        WRK2[Worker]
-    end
-
-    T480 --> CTRL
-    NUC --> WRK1
-    M920 --> WRK2
-
-    subgraph GITOPS["GitOps"]
-        GH[GitHub repo] -->|HTTPS + PAT| FLUX[Flux]
-    end
-
-    FLUX --> K3S
-
-    subgraph SVC["Services"]
-        LD[Linkding]
-        ML[Mealie]
-    end
-
-    K3S --> SVC
+    GH[GitHub repo] -->|HTTPS + PAT| FLUX[Flux]    
+    VIP -.-|floats between nodes| CTRL
 ```
 
 ## Hardware
@@ -90,21 +98,18 @@ I decided to use a combination of an old laptop and old mini computers because t
 | Promox Host Management | .5 |
 | K3s VIP (kube-vip) | .10 |
 | T480 (node1, control) | .11 |
-| NUC (node2) | .12 |
-| M920Q (node3) | .13 |
+| NUC (node2, control) | .12 |
+| M920Q (node3, control) | .13 |
 
 </div>
 
 ## Deployed Services
 
-<div align="center">
+| | Service | Purpose | Status |
+|:---:|---|---|:---:|
+| <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimeblogs.com/) |
+| <img src="doc/img/mealie.png" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
 
-| Service | Purpose | Status |
-|---|---|---|
-| Linkding | Bookmark manager | Live |
-| Mealie | Recipe/meal planning | Not Live |
-
-</div>
 
 ## Repo Structure
 I decided to use Flux's recommended repository structure
