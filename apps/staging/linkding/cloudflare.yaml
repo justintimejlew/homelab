@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: cloudflared
-  replicas: 2 # You could also consider elastic scaling for this deployment
+  replicas: 2 # Recommended to use 2 for elastic scaling
   template:
     metadata:
       labels:
@@ -14,10 +14,9 @@ spec:
     spec:
       containers:
         - name: cloudflared
-          image: cloudflare/cloudflared:latest
+          image: cloudflare/cloudflared:latest # latest is best to keep up to date with security patches
           args:
             - tunnel
-
             # Points cloudflared to the config file, which configures what
             # cloudflared will actually do. This file is created by a ConfigMap
             # below.
