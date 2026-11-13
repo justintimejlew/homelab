@@ -144,26 +144,26 @@ I decided to use Flux's recommended repository structure
 ```
 
 ## Roadmap
+
 | Category | Task | Status | Date |
-|---|---|---|---|
-| Network | Segment network on 802.1Q VLAN 10 trunk for security isolation | Done | 09/16/26 |
-| Homelab | Join M920Q as 3rd node for HA etcd quorum | Done | 09/27/26 |
-| Homelab | Expose Linkding to the internet | Done | 10/19/26 |
-| Homelab | Set up Ingress with Traefik | Pending | |
-| Homelab | Configure secrets management (Azure Key Vault sync) | Pending | |
-| Homelab | Add monitoring stack via Helm | Pending | |
-| Homelab | Automate image updates (Flux image automation) | Pending | |
-| Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | Pending | |
-| Cloud & IaC | Learn IaC fundamentals and Terraform modules | Pending | |
-| Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | Pending | |
-| Application & Database | Deploy n8n and expose it publicly | Pending | |
-| Application & Database | Deploy Postgres and connect n8n to it | Pending | |
-| Application & Database | Explore running databases in Kubernetes (CloudNativePG) | Pending | |
-| Application & Database | Configure and test CNPG backup/restore workflows | Pending | |
-| Production Readiness | Harden AKS cluster access and apply operational best practices | Pending | |
-| Production Readiness | Deploy a production-grade application with production-grade monitoring | Pending | |
-| Production Readiness | Handle staging environment fixes and production cluster/customer onboarding | Pending | |
-| GitOps | Extend Flux GitOps patterns across staging and production environments | Pending | |
+|---|---|:---:|:---:|
+| Network | Segment network on 802.1Q VLAN 10 trunk for security isolation | ✅ | 09/16/26 |
+| Homelab | Join M920Q as 3rd node for HA etcd quorum | ✅ | 09/27/26 |
+| Homelab | Expose Linkding to the internet | ✅ | 10/19/26 |
+| Homelab | Set up Ingress with Traefik | ✅ | 10/23/26 |
+| Homelab | Add monitoring stack via Helm | ✅ | 11/09/26 |
+| Homelab | Automate Flux image updates | ✅ | 11/12/26 |
+| Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | ⏳ | |
+| Cloud & IaC | Learn IaC fundamentals and Terraform modules | ⏳ | |
+| Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | ⏳ | |
+| Application & Database | Deploy n8n and expose it publicly | ⏳ | |
+| Application & Database | Deploy Postgres and connect n8n to it | ⏳ | |
+| Application & Database | Explore running databases in Kubernetes (CloudNativePG) | ⏳ | |
+| Application & Database | Configure and test CNPG backup/restore workflows | ⏳ | |
+| Production Readiness | Harden AKS cluster access and apply operational best practices | ⏳ | |
+| Production Readiness | Deploy a production-grade application with production-grade monitoring | ⏳ | |
+| Production Readiness | Handle staging environment fixes and production cluster/customer onboarding | ⏳ | |
+| GitOps | Extend Flux GitOps patterns across staging and production environments | ⏳ | |
 
 ## Lessons Learned / Troubleshooting
 
@@ -257,4 +257,12 @@ I wanted to learn how to rotate a token in the event that one needed to be chang
 Flux only applies resources listed in `kustomization.yaml`. When I added `service.yaml` and `cloudflare.yaml` for the Cloudflare Tunnel, Flux skipped them with no error, so the app wasn't reachable.
 
 **Fix:** added each new manifest to the `resources:` list, then committed, pushed, and ran `flux reconcile kustomization <name>`. Do this every time an app is added or updated.
+</details>
+
+<details>
+<summary><strong>Ensure secret names are correct when creating them</strong></summary>
+
+I accidentally copied the same <code>kubectl create secret</code> command using the <code>linkding-container-env</code> name, but the cronjob I created expected <code>renovate-container-env</code> name. The pod failed with a CreateContainerConfigError.
+
+**Fix:** I was able to update the yaml file within my homelab and that allowed Flux to reconcile the changes correctly.
 </details>
