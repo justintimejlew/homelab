@@ -22,6 +22,7 @@ spec:
           envFrom:
             - configMapRef:
                 name: audiobookshelf-configmap
+
       restartPolicy: Always
       #     volumeMounts:
       #       - name: linkding-data
