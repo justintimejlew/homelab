@@ -5,3 +5,4 @@ resources:
   - deployment.yaml
   #  - storage.yaml - Not included at this time
   - service.yaml
+  - configmap.yaml
