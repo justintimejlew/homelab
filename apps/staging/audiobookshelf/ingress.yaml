@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: audiobookshelf
+  namespace: audiobookshelf
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: audiobook.justintimeblogs.com
+      http:
+        paths:
+          - backend:
+              service:
+                name: audiobookshelf
+                port:
+                  number: 3005
+            path: /
+            pathType: Prefix
