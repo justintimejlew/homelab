@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: justintimejlew
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: justintimejlew
+  template:
+    metadata:
+      labels:
+        app: justintimejlew
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101 # nginx user in nginx-unprivileged
+        runAsGroup: 101
+
+      containers:
+        - name: justintimejlew
+          image: ghcr.io/justintimejlew/justintimejlew-site:1.0.0 # built from the private justintimejlew-site repo
+          ports:
+            - containerPort: 8080
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 20
+
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              memory: 64Mi
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+
+          volumeMounts:
+            # nginx writes its pid and temp files here
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
