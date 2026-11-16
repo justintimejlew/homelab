@@ -19,7 +19,7 @@ spec:
 
       containers:
         - name: justintimejlew
-          image: ghcr.io/justintimejlew/justintimejlew-site:1.0.1 # built from the private justintimejlew-site repo
+          image: ghcr.io/justintimejlew/justintimejlew-site:1.1.0 # built from the private justintimejlew-site repo
           ports:
             - containerPort: 8080
 
