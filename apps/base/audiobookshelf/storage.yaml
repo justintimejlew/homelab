@@ -1,7 +1,31 @@
+# Because I did not specify a Storage Class,
+# local-path which is the default rancher provisioner is set
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: linkding-data-pvc
+  name: audiobookshelf-config
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audiobookshelf-metadata
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: audiobookshelf-audiobooks
 spec:
   accessModes:
     - ReadWriteOnce

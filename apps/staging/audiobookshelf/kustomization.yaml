@@ -3,7 +3,3 @@ kind: Kustomization
 namespace: audiobookshelf
 resources:
   - ../../base/audiobookshelf/
-  # - cloudflare.yaml # <-- Controls the cloudflare tunnels
-  # - tunnel-credentials.yaml
-  # - linkding-container-env-secret.yaml
-  # - ingress.yaml
