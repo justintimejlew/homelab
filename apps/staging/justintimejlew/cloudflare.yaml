@@ -71,6 +71,6 @@ data:
       service: http://justintimejlew:80
     # subdomains for my apps
     - hostname: audiobookshelf.justintimejlew.com
-      service: http://audiobookshelf.audiobookshelf.svc.cluster.local:3005
+      service: http://audiobookshelf.audiobookshelf:3005
     # cloudflared requires a catch-all as the last rule
     - service: http_status:404
