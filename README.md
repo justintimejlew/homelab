@@ -2,7 +2,7 @@
 
 # Homelab - Beyond the Certifications
 
-3-node HA Kubernetes (K3s) cluster managed with Flux GitOps
+3-node HA Kubernetes (K3s) cluster managed with Flux GitOps and Renovate-driven image automation
 
 ![K3s](https://img.shields.io/badge/K3s-HA%20etcd-FFC61C?logo=k3s&logoColor=black)
 ![Flux](https://img.shields.io/badge/GitOps-Flux-5468FF?logo=flux&logoColor=white)
@@ -18,7 +18,9 @@
 - GitOps with Flux: everything in the cluster is declared in this repo
 - VLAN-isolated cluster network (802.1Q) with no path to the home LAN
 - Mixed bare-metal and Proxmox-virtualized nodes
-- Public service exposed through a Cloudflare Tunnel
+- Public services exposed through a Cloudflare Tunnel
+- Monitoring with Prometheus + Grafana via Helm
+- Automated image updates via Renovate
 
 ## Introduction
 After obtaining my RHCSA and RHCE, I realized quickly that even though certifications are helpful, what matters the most is what you do beyond the certifications.
@@ -43,6 +45,7 @@ flowchart TB
 
     subgraph K3S["K3s Cluster - VLAN 10"]
         VIP{{kube-vip}}
+        CF[cloudflared]
         subgraph CTRL["Control plane / etcd - 3-node quorum"]
             T480["ThinkPad T480
             (Node 1)"]
@@ -53,10 +56,15 @@ flowchart TB
         end
         subgraph SVC["Services"]
             LD[Linkding]
+            ABS[AudioBookShelf]
+            SITE[justintimejlew.com]
+            MON[Prometheus/Grafana]
         end
         FLUX ---| Deploys | SVC
         FLUX --- CTRL
+        CF -->|routes to ClusterIP| SVC
     end
+    CFT((Cloudflare Tunnel)) --- CF
    
     SW --- T480
     SW --- NUC
@@ -79,13 +87,11 @@ I decided to use a combination of an old laptop and old mini computers because t
 - OS: Fedora
 - Orchestration: K3s
 - GitOps: Flux (HTTPS/PAT auth)
-- Networking: LoadBalancer/Ingress not configured yet. Services are accessed via port-forwarding.
-
-<div align="center">
+- Networking: Cloudflare Tunnel exposes services externally — no LoadBalancer or Ingress controller needed; `cloudflared` routes directly to each service's ClusterIP from inside the cluster.
 
 ### VLAN 1 Configuration - Personal
 | Device | IP |
-|---|---|
+|---|:---:|
 | TL-SG108E Switch | .5 |
 | GL-A1300 (VLAN 1 Gateway) | .8 |
 | T480 (node) | .51 |
@@ -93,7 +99,7 @@ I decided to use a combination of an old laptop and old mini computers because t
 
 ### VLAN 10 Configuration - Cluster
 | Device | IP |
-|---|---|
+|---|:---:|
 | GL-A1300 (VLAN 10 Gateway) | .1 |
 | Promox Host Management | .5 |
 | K3s VIP (kube-vip) | .10 |
@@ -101,18 +107,18 @@ I decided to use a combination of an old laptop and old mini computers because t
 | NUC (node2, control) | .12 |
 | M920Q (node3, control) | .13 |
 
-</div>
-
 ## Deployed Services
 
 | | Service | Purpose | Status |
 |:---:|---|---|:---:|
-| <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimeblogs.com/) |
+| <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimejlew.com/) |
+| <img src="doc/img/audiobookshelf.svg" width="40" alt="AudioBookShelf"> | **Audiobookshelf** | Audiobook server | ✅ [Live](https://audiobookshelf.justintimejlew.com) |
+| <img src="doc/img/site.svg" width="40" alt="Personal Website"> | **justintimejlew.com** | Personal website | ✅ [Live](https://justintimejlew.com) |
 | <img src="doc/img/mealie.svg" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
 
-
 ## Repo Structure
-I decided to use Flux's recommended repository structure
+
+I decided to use Flux's recommended repository structure and below only shows the skeleton of the necessary levels...not all of my repository levels.
 ```
 ├── apps
 │   ├── base
@@ -141,6 +147,7 @@ I decided to use Flux's recommended repository structure
 │   └── staging
 │       └── kube-vip
 │           └── kustomization.yaml
+└── monitoring
 ```
 
 ## Roadmap
@@ -153,6 +160,8 @@ I decided to use Flux's recommended repository structure
 | Homelab | Set up Ingress with Traefik | ✅ | 10/23/26 |
 | Homelab | Add monitoring stack via Helm | ✅ | 11/09/26 |
 | Homelab | Automate Flux image updates | ✅ | 11/12/26 |
+| Homelab | Self-hosted personal website | ✅ | 11/15/26 |
+| Homelab | Expose AudioBookShelf to the internet | ✅ | 11/16/26 |
 | Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | ⏳ | |
 | Cloud & IaC | Learn IaC fundamentals and Terraform modules | ⏳ | |
 | Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | ⏳ | |
@@ -265,4 +274,20 @@ Flux only applies resources listed in `kustomization.yaml`. When I added `servic
 I accidentally copied the same <code>kubectl create secret</code> command using the <code>linkding-container-env</code> name, but the cronjob I created expected <code>renovate-container-env</code> name. The pod failed with a CreateContainerConfigError.
 
 **Fix:** I was able to update the yaml file within my homelab and that allowed Flux to reconcile the changes correctly.
+</details>
+
+<details>
+<summary><strong>Use one cloudflared deployment for all services on a tunnel</strong></summary>
+
+I planned to add a second <code>cloudflared</code> deployment and a second <code>tunnel-credentials.yaml</code> for audiobookshelf, using the same tunnel as justintimejlew.com. Each <code>cloudflared</code> pod only knows the ingress rules in its own <code>config.yaml</code>. Cloudflare sends requests to any connector on the tunnel, so some requests would reach a pod with no rule for the hostname and return a 404.
+
+**Fix:** I kept one <code>cloudflared</code> deployment in <code>apps/staging/justintimejlew</code> and added one ingress rule for each hostname in its ConfigMap. The rule for <code>audiobookshelf.justintimejlew.com</code> goes above the final <code>http_status:404</code> catch-all rule. I left <code>cloudflare.yaml</code> and <code>tunnel-credentials.yaml</code> commented out in the audiobookshelf kustomization.
+</details>
+
+<details>
+<summary><strong>Use the full service name when the app is in another namespace</strong></summary>
+
+My <code>cloudflared</code> pods run in the <code>justintimejlew</code> namespace and audiobookshelf runs in the <code>audiobookshelf</code> namespace. A short service name like <code>http://audiobookshelf:3005</code> only resolves inside the same namespace, so the tunnel could not find the service. I also considered adding <code>../audiobookshelf</code> to the justintimejlew kustomization. The <code>namespace</code> setting there would have moved the audiobookshelf resources into the wrong namespace.
+
+**Fix:** I used the <code>&lt;service&gt;.&lt;namespace&gt;</code> format in the ingress rule: <code>http://audiobookshelf.audiobookshelf:3005</code>. I kept each app in its own kustomization. I also added a proxied CNAME for the subdomain that points to the tunnel, and I restarted <code>cloudflared</code> with <code>kubectl -n justintimejlew rollout restart deploy/cloudflared</code> because it does not reload its config when the ConfigMap changes.
 </details>
