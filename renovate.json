@@ -4,5 +4,8 @@
     "fileMatch": [
       "\\.yaml$"
     ]
-  }
+  },
+  "ignorePaths": [
+    "clusters/staging/flux-system/**"
+  ]
 }
