@@ -74,5 +74,7 @@ data:
       service: http://linkding.linkding:9090
     - hostname: audiobookshelf.justintimejlew.com
       service: http://audiobookshelf.audiobookshelf:3005
+    - hostname: grafana.justintimejlew.com
+      service: http://kube-prometheus-stack-grafana.monitoring:80
     # cloudflared requires a catch-all as the last rule
     - service: http_status:404

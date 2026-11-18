@@ -156,12 +156,13 @@ I decided to use Flux's recommended repository structure and below only shows th
 |---|---|:---:|:---:|
 | Network | Segment network on 802.1Q VLAN 10 trunk for security isolation | ✅ | 09/16/26 |
 | Homelab | Join M920Q as 3rd node for HA etcd quorum | ✅ | 09/27/26 |
-| Homelab | Expose Linkding to the internet | ✅ | 10/19/26 |
+| Homelab | Exposed Linkding to the internet | ✅ | 10/19/26 |
 | Homelab | Set up Ingress with Traefik | ✅ | 10/23/26 |
 | Homelab | Add monitoring stack via Helm | ✅ | 11/09/26 |
 | Homelab | Automate Flux image updates | ✅ | 11/12/26 |
 | Homelab | Self-hosted personal website | ✅ | 11/15/26 |
-| Homelab | Expose AudioBookShelf to the internet | ✅ | 11/16/26 |
+| Homelab | Exposed AudioBookShelf to the internet | ✅ | 11/16/26 |
+| Homelab | Reconfigured Grafana into Cloudflare tunnel | ✅ | 11/18/26 |
 | Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | ⏳ | |
 | Cloud & IaC | Learn IaC fundamentals and Terraform modules | ⏳ | |
 | Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | ⏳ | |
@@ -290,4 +291,12 @@ I planned to add a second <code>cloudflared</code> deployment and a second <code
 My <code>cloudflared</code> pods run in the <code>justintimejlew</code> namespace and audiobookshelf runs in the <code>audiobookshelf</code> namespace. A short service name like <code>http://audiobookshelf:3005</code> only resolves inside the same namespace, so the tunnel could not find the service. I also considered adding <code>../audiobookshelf</code> to the justintimejlew kustomization. The <code>namespace</code> setting there would have moved the audiobookshelf resources into the wrong namespace.
 
 **Fix:** I used the <code>&lt;service&gt;.&lt;namespace&gt;</code> format in the ingress rule: <code>http://audiobookshelf.audiobookshelf:3005</code>. I kept each app in its own kustomization. I also added a proxied CNAME for the subdomain that points to the tunnel, and I restarted <code>cloudflared</code> with <code>kubectl -n justintimejlew rollout restart deploy/cloudflared</code> because it does not reload its config when the ConfigMap changes.
+</details>
+
+<details>
+<summary><strong>Encrypt the Grafana admin password with SOPS before exposing it to the internet</strong></summary>
+
+I put the Grafana admin password in plain text as <code>adminPassword</code> in <code>release.yaml</code> and committed it to my public homelab repo. At that point Grafana was only reachable locally through a port forward, so it was low risk. Once I routed Grafana through the Cloudflare Tunnel, anyone could read that password in the repo and log in. The password also stays in the Git history after I remove it from the file.
+
+**Fix:** I moved the password into a Kubernetes Secret and encrypted it with SOPS before I committed it. I created the Secret with <code>kubectl create secret generic grafana-admin --dry-run=client -o yaml</code> and encrypted it with <code>sops -e -i</code>. I used <code>read -rs</code> to enter the password so it never appeared on the screen or in my shell history. Then I pointed the Helm values at the Secret with <code>admin.existingSecret</code> and removed <code>adminPassword</code>. I confirmed that the values showed <code>ENC[AES256_GCM,...]</code> before I committed. I set a new password, because the old one is still in the Git history.
 </details>

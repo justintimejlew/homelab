@@ -27,22 +27,12 @@ spec:
           kind: PrometheusRule
   values:
     grafana:
-      adminPassword: justintime
+      admin:
+        existingSecret: grafana-admin
+        userKey: admin-user
+        passwordKey: admin-password
       ingress:
-        enabled: true
-
-        ingressClassName: traefik
-
-        ## Hostnames.
-        ## Must be provided if Ingress is enable.
-        ##
-        hosts:
-          - grafana.justintimeblogs.com
-
-        ## TLS configuration for grafana Ingress
-        ## Secret must be manually created in the namespace
-        ##
-        tls:
-          - secretName: grafana-tls-secret
-            hosts:
-              - grafana.justintimeblogs.com
+        enabled: false
+      grafana.ini:
+        server:
+          root_url: https://grafana.justintimejlew.com
