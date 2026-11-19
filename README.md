@@ -58,7 +58,7 @@ flowchart TB
             LD[Linkding]
             ABS[AudioBookShelf]
             SITE[justintimejlew.com]
-            MON[Prometheus/Grafana]
+            MON[Grafana]
         end
         FLUX ---| Deploys | SVC
         FLUX --- CTRL
@@ -115,7 +115,7 @@ I decided to use a combination of an old laptop and old mini computers because t
 | <img src="doc/img/site.svg" width="40" alt="Personal Website"> | **justintimejlew.com** | Personal website | ✅ [Live](https://justintimejlew.com) |
 | <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimejlew.com/) |
 | <img src="doc/img/audiobookshelf.svg" width="40" alt="AudioBookShelf"> | **Audiobookshelf** | Audiobook server | ✅ [Live](https://audiobookshelf.justintimejlew.com) |
-| <img src="doc/img/grafana.svg" width="40" alt="Grafana"> | **Grafana** | Observability & Monitoring | ✅ [Live](https://justintimejlew.com) |
+| <img src="doc/img/grafana.svg" width="40" alt="Grafana"> | **Grafana** | Observability & Monitoring | ✅ [Live](https://grafana.justintimejlew.com) |
 | <img src="doc/img/mealie.svg" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
 
 ## Repo Structure
