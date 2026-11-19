@@ -109,11 +109,13 @@ I decided to use a combination of an old laptop and old mini computers because t
 
 ## Deployed Services
 
+**Security Note:** Services such as Grafana, Linkding and AudioBookShelf are exposed only via outbound Cloudflare Tunnels, with no port-forwarding on my router. Cloudflare Access (Zero Trust) enforces GitHub SSO in the front of each app, on top of each app's own login.
 | | Service | Purpose | Status |
 |:---:|---|---|:---:|
+| <img src="doc/img/site.svg" width="40" alt="Personal Website"> | **justintimejlew.com** | Personal website | ✅ [Live](https://justintimejlew.com) |
 | <img src="doc/img/linkding.svg" width="40" alt="Linkding"> | **Linkding** | Bookmark manager | ✅ [Live](https://linkding.justintimejlew.com/) |
 | <img src="doc/img/audiobookshelf.svg" width="40" alt="AudioBookShelf"> | **Audiobookshelf** | Audiobook server | ✅ [Live](https://audiobookshelf.justintimejlew.com) |
-| <img src="doc/img/site.svg" width="40" alt="Personal Website"> | **justintimejlew.com** | Personal website | ✅ [Live](https://justintimejlew.com) |
+| <img src="doc/img/grafana.svg" width="40" alt="Grafana"> | **Grafana** | Observability & Monitoring | ✅ [Live](https://justintimejlew.com) |
 | <img src="doc/img/mealie.svg" width="40" alt="Mealie"> | **Mealie** | Recipe/meal planning | ⏳ Not live |
 
 ## Repo Structure
