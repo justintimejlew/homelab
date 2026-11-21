@@ -156,26 +156,26 @@ I decided to use Flux's recommended repository structure and below only shows th
 
 | Category | Task | Status | Date |
 |---|---|:---:|:---:|
-| Network | Segment network on 802.1Q VLAN 10 trunk for security isolation | ✅ | 09/16/26 |
+| Networking | Segment network on 802.1Q VLAN 10 trunk for security isolation | ✅ | 09/16/26 |
 | Homelab | Join M920Q as 3rd node for HA etcd quorum | ✅ | 09/27/26 |
-| Homelab | Exposed Linkding to the internet | ✅ | 10/19/26 |
-| Homelab | Set up Ingress with Traefik | ✅ | 10/23/26 |
-| Homelab | Add monitoring stack via Helm | ✅ | 11/09/26 |
-| Homelab | Automate Flux image updates | ✅ | 11/12/26 |
-| Homelab | Self-hosted personal website | ✅ | 11/15/26 |
-| Homelab | Exposed AudioBookShelf to the internet | ✅ | 11/16/26 |
-| Homelab | Reconfigured Grafana into Cloudflare tunnel | ✅ | 11/18/26 |
+| Networking | Exposed Linkding to the internet | ✅ | 10/19/26 |
+| Networking | Set up Ingress with Traefik | ✅ | 10/23/26 |
+| Observability | Add monitoring stack via Helm | ✅ | 11/09/26 |
+| GitOps | Extend Flux GitOps patterns across staging and production environments | ✅ | 11/12/26 |
+| Applications | Self-hosted personal website | ✅ | 11/15/26 |
+| Applications | Exposed AudioBookShelf to the internet | ✅ | 11/16/26 |
+| Networking | Reconfigured Grafana into Cloudflare tunnel | ✅ | 11/18/26 |
+| Homelab | Resolve DiskPressure evictions and tune node-exporter probes | ✅ | 11/21/26 |
 | Cloud & IaC | Stand up Terraform-managed repo/Azure foundation | ⏳ | |
 | Cloud & IaC | Learn IaC fundamentals and Terraform modules | ⏳ | |
 | Cloud & IaC | Provision Azure Kubernetes Service (AKS) with Terraform | ⏳ | |
-| Application & Database | Deploy n8n and expose it publicly | ⏳ | |
-| Application & Database | Deploy Postgres and connect n8n to it | ⏳ | |
-| Application & Database | Explore running databases in Kubernetes (CloudNativePG) | ⏳ | |
-| Application & Database | Configure and test CNPG backup/restore workflows | ⏳ | |
-| Production Readiness | Harden AKS cluster access and apply operational best practices | ⏳ | |
-| Production Readiness | Deploy a production-grade application with production-grade monitoring | ⏳ | |
-| Production Readiness | Handle staging environment fixes and production cluster/customer onboarding | ⏳ | |
-| GitOps | Extend Flux GitOps patterns across staging and production environments | ⏳ | |
+| Application | Deploy n8n and expose it publicly | ⏳ | |
+| Application | Deploy Postgres and connect n8n to it | ⏳ | |
+| Application | Explore running databases in Kubernetes (CloudNativePG) | ⏳ | |
+| Application | Configure and test CNPG backup/restore workflows | ⏳ | |
+| Production | Harden AKS cluster access and apply operational best practices | ⏳ | |
+| Production | Deploy a production-grade application with production-grade monitoring | ⏳ | |
+| Production | Handle staging environment fixes and production cluster/customer onboarding | ⏳ | |
 
 ## Lessons Learned / Troubleshooting
 
@@ -301,4 +301,20 @@ My <code>cloudflared</code> pods run in the <code>justintimejlew</code> namespac
 I put the Grafana admin password in plain text as <code>adminPassword</code> in <code>release.yaml</code> and committed it to my public homelab repo. At that point Grafana was only reachable locally through a port forward, so it was low risk. Once I routed Grafana through the Cloudflare Tunnel, anyone could read that password in the repo and log in. The password also stays in the Git history after I remove it from the file.
 
 **Fix:** I moved the password into a Kubernetes Secret and encrypted it with SOPS before I committed it. I created the Secret with <code>kubectl create secret generic grafana-admin --dry-run=client -o yaml</code> and encrypted it with <code>sops -e -i</code>. I used <code>read -rs</code> to enter the password so it never appeared on the screen or in my shell history. Then I pointed the Helm values at the Secret with <code>admin.existingSecret</code> and removed <code>adminPassword</code>. I confirmed that the values showed <code>ENC[AES256_GCM,...]</code> before I committed. I set a new password, because the old one is still in the Git history.
+</details>
+
+<details>
+<summary><strong>T480 fan running constantly from workload spikes and liveness-probe restarts</strong></summary>
+
+After adding Renovate and Grafana, my T480's fan was running at ~3,600 RPM all the time. `kubectl top` showed the cluster was mostly idle, but Renovate ran every hour on the T480, GNOME's file indexer (`localsearch`) was using ~40% CPU, and node-exporter had restarted 50 times. The restarts had exit code 143: the kubelet killed the pod because the 1s liveness probe timed out during load spikes.
+
+**Fix:** I changed the Renovate CronJob to run every 3 hours and limited how many old jobs it keeps. I also increased node-exporter's probe `timeoutSeconds` to 5 and `failureThreshold` to 5 in the kube-prometheus-stack HelmRelease values. Then, I turned off GNOME Search Locations. Fan went from ~3,600 RPM to 0 RPM, and node-exporter has not restarted since.
+</details>
+
+<details>
+<summary><strong>Pod evictions from Fedora Server's 15G default root volume</strong></summary>
+
+While addressing my fan issues, I noticed dozens of Grafana, cloudflared and site pods were evicted on the M920Q. The node had briefly reported `DiskPressure`, and `df -h` showed the root filesystem was only 15G (81% used) on a 512GB disk. The Fedora Server installer leaves the rest of the volume group unallocated, and container images filled the root volume until kubelet's eviction threshold kicked in.
+
+**Fix:** ran `lvextend -r -l +100%FREE /dev/fedora/root` on the M920Q and the NUC VM, pruned unused images with `k3s crictl rmi --prune`, and deleted the evicted pods.
 </details>
