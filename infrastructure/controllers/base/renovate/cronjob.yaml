@@ -4,14 +4,20 @@ metadata:
   name: renovate
   namespace: renovate
 spec:
-  schedule: "@hourly"
+  schedule: "0 */3 * * *" # Runs every 3 hours
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1 # Prevents history from being cluttered
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
       template:
         spec:
+          nodeSelector:
+            kubernetes.io/hostname: m920q # moved node to prevent t480 from running hot
           containers:
             - name: renovate
+              resources:
+                limits: { cpu: "1", memory: 1Gi }
               image: renovate/renovate:latest
               args:
                 - justintimejlew/homelab
