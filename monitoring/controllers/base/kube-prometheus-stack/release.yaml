@@ -36,3 +36,10 @@ spec:
       grafana.ini:
         server:
           root_url: https://grafana.justintimejlew.com
+    prometheus-node-exporter:
+      livenessProbe:
+        initialDelaySeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 5
+      readinessProbe:
+        timeoutSeconds: 5
